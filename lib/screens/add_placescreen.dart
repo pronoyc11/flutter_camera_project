@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:fav_places/models/place.dart';
 import 'package:fav_places/provider/place_provider.dart';
 import 'package:fav_places/widgets/image_picker.dart';
+import 'package:fav_places/widgets/location_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
 class AddPlacescreen extends ConsumerStatefulWidget {
   const AddPlacescreen({super.key});
@@ -13,20 +17,34 @@ class AddPlacescreen extends ConsumerStatefulWidget {
 
 class _AddPlacescreenState extends ConsumerState<AddPlacescreen> {
   final _titleController = TextEditingController();
+  File? finalSelectedImage;
+  LatLng? location;
+
+  void setLocation(LatLng l) {
+    setState(() {
+      location = l;
+    });
+  }
 
   void onFormSave() {
     final enteredText = _titleController.text;
 
-    if (enteredText.trim().length < 2) {
+    if (enteredText.trim().length < 2 ||
+        finalSelectedImage == null ||
+        location == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please provide a valid name with more than two characters!"),
+          content: Text(
+            "Please provide a valid title, image, and location.",
+          ),
         ),
       );
       return;
     }
 
-    ref.read(placeProvider.notifier).addPlace(Place(title: enteredText));
+    ref.read(placeProvider.notifier).addPlace(
+      Place(title: enteredText.trim(), image: finalSelectedImage!, location: location!),
+    );
     Navigator.of(context).pop();
   }
 
@@ -53,15 +71,30 @@ class _AddPlacescreenState extends ConsumerState<AddPlacescreen> {
                 icon: Icon(Icons.place),
               ),
             ),
-          const SizedBox(height: 16,),
+            const SizedBox(height: 16),
 
-          ImagePickerr(),
+            ImagePickerr(
+              onSelectImage: (File img) {
+                finalSelectedImage = img;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            //Add Location
+            LocationPicker(selectLocation:setLocation),
+
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: () => _titleController.clear(),
+                  onPressed: () {
+                    _titleController.clear();
+                    setState(() {
+                      finalSelectedImage = null;
+                      location = null;
+                    });
+                  },
                   child: const Text("Reset"),
                 ),
                 ElevatedButton(

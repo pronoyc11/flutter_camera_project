@@ -6,21 +6,23 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImagePickerr extends StatefulWidget {
-  const ImagePickerr({super.key});
+  const ImagePickerr({super.key,required this.onSelectImage});
 
+final void Function(File) onSelectImage; 
   @override
   State<ImagePickerr> createState() => _ImagePickerrState();
 }
 
 class _ImagePickerrState extends State<ImagePickerr> {
   File? storedImage;
-
   Future<void> pickAnImage() async {
     if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Camera capture is supported on Android and iOS devices only.'),
+        SnackBar(
+          content: Text(
+            "Camera is only supported for android or ios platform!",
+          ),
         ),
       );
       return;
@@ -33,28 +35,27 @@ class _ImagePickerrState extends State<ImagePickerr> {
         maxWidth: 600,
         imageQuality: 85,
       );
-
-      if (pickedImage == null || !mounted) {
+      if (!mounted || pickedImage == null) {
         return;
       }
-
       setState(() {
         storedImage = File(pickedImage.path);
       });
+      widget.onSelectImage(storedImage!);
     } on PlatformException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Camera permission/error: ${error.message ?? error.code}'),
+          content: Text(
+            "Platform permission : ${error.message}, ${error.code}",
+          ),
         ),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not open camera: $error'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open camera: $error')));
     }
   }
 
@@ -75,19 +76,20 @@ class _ImagePickerrState extends State<ImagePickerr> {
         child: Image.file(
           storedImage!,
           fit: BoxFit.cover,
-          width: double.infinity,
           height: double.infinity,
+          width: double.infinity,
         ),
       );
     }
-
     return Container(
       height: 250,
       width: double.infinity,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.40),
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.40),
         ),
       ),
       child: content,

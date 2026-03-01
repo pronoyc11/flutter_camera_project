@@ -28,6 +28,10 @@
 	<string>This app needs camera access to take place photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to save and use place photos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs location access to let you save place locations.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs location access to let you save place locations.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

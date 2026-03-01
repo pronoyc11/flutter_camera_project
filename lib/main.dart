@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:maptiler_flutter/maptiler_flutter.dart';
 
 final colorScheme = ColorScheme.fromSeed(
   brightness: Brightness.dark,
@@ -21,6 +22,7 @@ final theme = ThemeData().copyWith(
 );
 
 void main() {
+  MapTilerConfig.setApiKey('0x2c1U4qCEAVNNtSCKcT');
   runApp(
     const ProviderScope(
       child: MyApp(),

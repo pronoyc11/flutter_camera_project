@@ -34,18 +34,41 @@ class FavoritePlaces extends ConsumerWidget {
     if (allPlaces.isNotEmpty) {
       content = ListView.builder(
         itemCount: allPlaces.length,
-        itemBuilder: (ctx, index) => ListTile(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (ctx) {
-                  return PlaceDetails(place: allPlaces[index]);
-                },
+        itemBuilder: (ctx, index) {
+          final place = allPlaces[index];
+          return ListTile(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) {
+                    return PlaceDetails(place: place);
+                  },
+                ),
+              );
+            },
+            leading: CircleAvatar(
+              radius: 26,
+              backgroundImage: FileImage(place.image),
+            ),
+            title: Text(place.title),
+            subtitle: FutureBuilder<String>(
+              future: ref.read(placeProvider.notifier).retrievingLocation(
+                placeId: place.id,
+                longitude: place.location.longitude,
+                latitude: place.location.latitude,
               ),
-            );
-          },
-          title: Text(allPlaces[index].title),
-        ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text('Loading address...');
+                }
+                if (snapshot.hasError) {
+                  return const Text('Address unavailable');
+                }
+                return Text(snapshot.data ?? 'Address unavailable');
+              },
+            ),
+          );
+        },
       );
     }
 
