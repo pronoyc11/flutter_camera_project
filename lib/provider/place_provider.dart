@@ -1,15 +1,47 @@
+import 'dart:io';
+
 import 'package:fav_places/models/place.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:maptiler_flutter/maptiler_flutter.dart';
 import 'package:path_provider/path_provider.dart' as sys_path;
 import 'package:path/path.dart' as path;
-
-
-
+import 'package:sqflite/sqflite.dart' as sql;
+import 'package:sqflite/sqlite_api.dart';
 
 class PlacesNotifier extends StateNotifier<List<Place>> {
   PlacesNotifier() : super([]);
   final Map<String, String> _addressCache = {};
+
+  Future<void> loadPlaces() async {
+    final db = await _getDatabase();
+    final userPlaces = await db.query('user_places');
+
+    final places = userPlaces.map((row) {
+      return Place(
+        id: row['id'] as String,
+        title: row['title'] as String,
+        image: File(row['image'] as String),
+        location: LatLng(row['lat'] as double, row['long'] as double),
+      );
+    }).toList();
+
+    state = places;
+  }
+
+  Future<Database> _getDatabase() async {
+    final dbPath = await sql.getDatabasesPath();
+    final db = await sql.openDatabase(
+      path.join(dbPath, 'places.db'),
+      onCreate: (db, version) {
+        return db.execute(
+          "CREATE TABLE user_places(id TEXT PRIMARY KEY,title TEXT,image TEXT,lat REAL,long REAL,address TEXT)",
+        );
+      },
+      version: 1,
+    );
+    return db;
+  }
 
   void addPlace(Place p) async {
     final appDir = await sys_path.getApplicationDocumentsDirectory();
@@ -21,6 +53,21 @@ class PlacesNotifier extends StateNotifier<List<Place>> {
       location: p.location,
     );
 
+    final address = await retrievingLocation(
+      placeId: newP.id,
+      longitude: newP.location.longitude,
+      latitude: newP.location.latitude,
+    );
+
+    final db = await _getDatabase();
+    db.insert('user_places', {
+      'id': newP.id,
+      'title': newP.title,
+      'image': newP.image.path,
+      'lat': newP.location.latitude,
+      'long': newP.location.longitude,
+      'address': address,
+    });
     state = [...state, newP];
   }
 

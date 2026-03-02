@@ -5,8 +5,21 @@ import 'package:fav_places/screens/place_details.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class FavoritePlaces extends ConsumerWidget {
+class FavoritePlaces extends ConsumerStatefulWidget {
   const FavoritePlaces({super.key});
+
+  @override
+  ConsumerState<FavoritePlaces> createState() => _FavoritePlacesState();
+}
+
+class _FavoritePlacesState extends ConsumerState<FavoritePlaces> {
+  late Future<void> _placesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _placesFuture = ref.read(placeProvider.notifier).loadPlaces();
+  }
 
   void navigateToAdd(BuildContext context) {
     Navigator.of(context).push(
@@ -19,7 +32,7 @@ class FavoritePlaces extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     List<Place> allPlaces = ref.watch(placeProvider);
 
     Widget content = Center(
@@ -52,11 +65,13 @@ class FavoritePlaces extends ConsumerWidget {
             ),
             title: Text(place.title),
             subtitle: FutureBuilder<String>(
-              future: ref.read(placeProvider.notifier).retrievingLocation(
-                placeId: place.id,
-                longitude: place.location.longitude,
-                latitude: place.location.latitude,
-              ),
+              future: ref
+                  .read(placeProvider.notifier)
+                  .retrievingLocation(
+                    placeId: place.id,
+                    longitude: place.location.longitude,
+                    latitude: place.location.latitude,
+                  ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Text('Loading address...');
@@ -82,7 +97,12 @@ class FavoritePlaces extends ConsumerWidget {
           ),
         ],
       ),
-      body: content,
+      body: FutureBuilder(
+        future: _placesFuture,
+        builder: (context, snapshot) {
+          return content;
+        },
+      ),
     );
   }
 }
